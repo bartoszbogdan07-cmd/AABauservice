@@ -7,43 +7,44 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip zip unzip openjdk-17-jdk libffi-dev libssl-dev autoconf automake libtool pkg-config zlib1g-dev
+          sudo apt update
+          sudo apt install -y python3-pip python3-setuptools python3-wheel \
+            git zip unzip openjdk-17-jdk libffi-dev libssl-dev \
+            libsqlite3-dev zlib1g-dev
 
       - name: Install buildozer
         run: |
-          pip3 install --upgrade pip setuptools wheel Cython
-          pip3 install buildozer==1.5.0
+          pip install --upgrade pip
+          pip install cython
+          pip install buildozer==1.5.0
 
-      - name: Configure Android NDK/SDK
+      - name: Configure Android SDK/NDK
         run: |
           mkdir -p $HOME/.buildozer/android/platform
           cd $HOME/.buildozer/android/platform
-          # Android NDK r21e (stabilna wersja dla Buildozer)
-          wget https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip
-          unzip -q android-ndk-r21e-linux-x86_64.zip
-          mv android-ndk-r21e ndk-r21e
-          rm android-ndk-r21e-linux-x86_64.zip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk-tools.zip
+          unzip -q sdk-tools.zip -d cmdline-tools
+          rm sdk-tools.zip
+          yes | cmdline-tools/cmdline-tools/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform \
+            "platform-tools" \
+            "platforms;android-31" \
+            "build-tools;33.0.2" \
+            "ndk;21.4.7075529"
 
       - name: Build APK
         run: |
           buildozer android debug log_level=2
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: kivy-apk
-          path: bin/*.apk
+      - name: Uplo
