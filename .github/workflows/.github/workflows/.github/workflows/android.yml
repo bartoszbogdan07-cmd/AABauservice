@@ -2,90 +2,42 @@ name: Build Kivy APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install ALL dependencies
+      - name: Install system dependencies
         run: |
-          sudo apt-get update
+          sudo apt-get update -qq
           sudo apt-get install -y \
-            python3-pip \
-            python3-setuptools \
-            python3-wheel \
-            python3-venv \
-            build-essential \
-            git \
-            zip \
-            unzip \
-            openjdk-17-jdk \
-            autoconf \
-            automake \
-            libtool \
-            pkg-config \
-            cmake \
-            ninja-build \
-            libffi-dev \
-            libssl-dev \
-            zlib1g-dev \
-            libsqlite3-dev \
-            libjpeg-dev \
-            libpng-dev \
-            libfreetype6-dev \
-            libblas-dev \
-            liblapack-dev \
-            gfortran \
-            curl \
-            wget \
-            tar \
-            xz-utils \
-            rsync \
-            ccache \
-            lld \
-            llvm
+            build-essential git zip unzip openjdk-17-jdk \
+            python3 python3-pip python3-setuptools python3-wheel \
+            autoconf libtool pkg-config zlib1g-dev \
+            libncurses5 libncurses5-dev libtinfo5 \
+            cmake libffi-dev libssl-dev libsqlite3-dev \
+            libjpeg-dev libfreetype6-dev libblas-dev liblapack-dev gfortran
 
-      - name: Upgrade pip & install Python deps
+      - name: Install Buildozer
         run: |
-          pip install --upgrade pip
-          pip install cython buildozer==1.5.0 virtualenv
-
-      - name: Configure Android SDK + NDK
-        run: |
-          mkdir -p $HOME/.buildozer/android/platform
-          cd $HOME/.buildozer/android/platform
-          
-          # Pobierz Commandline Tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdtools.zip
-          mkdir -p android-sdk/cmdline-tools
-          unzip cmdtools.zip -d android-sdk/cmdline-tools
-          mv android-sdk/cmdline-tools/cmdline-tools android-sdk/cmdline-tools/latest
-          rm cmdtools.zip
-
-          export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
-          export PATH=$ANDROIDSDK/cmdline-tools/latest/bin:$ANDROIDSDK/platform-tools:$PATH
-
-          yes | sdkmanager --licenses
-          sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;33.0.2" "ndk;25.1.8937393"
+          pip install --upgrade pip wheel Cython buildozer
 
       - name: Build APK
         run: |
           export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
           export ANDROIDNDK=$HOME/.buildozer/android/platform/android-ndk-r25b
-          export PATH=$ANDROIDSDK/cmdline-tools/latest/bin:$ANDROIDSDK/platform-tools:$PATH
-          buildozer android debug log_level=2
+          export ANDROIDAPI=31
+          export ANDROIDMINAPI=24
+          buildozer android debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: kivy-apk
+          name: AABauservice-APK
           path: bin/*.apk
