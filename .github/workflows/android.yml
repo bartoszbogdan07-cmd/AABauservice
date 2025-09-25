@@ -1,0 +1,39 @@
+name: Build Kivy APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: System deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-venv python3-pip git zip unzip \
+            libffi-dev libssl-dev zlib1g libstdc++6 build-essential pkg-config autoconf automake libtool cmake
+
+      - name: Install Buildozer
+        run: |
+          python3 -m pip install --upgrade pip wheel setuptools packaging cython
+          python3 -m pip install "git+https://github.com/kivy/buildozer.git@master"
+
+      - name: Build debug APK
+        run: |
+          yes | buildozer -v android debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: bin/*-debug.apk
