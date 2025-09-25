@@ -34,7 +34,16 @@ jobs:
     - name: Install buildozer
       run: |
         pip3 install --upgrade pip setuptools wheel Cython
-        pip3 install buildozer
+        pip3 install buildozer==1.5.0
+
+    - name: Configure Android NDK/SDK
+      run: |
+        mkdir -p $HOME/.buildozer/android/platform
+        cd $HOME/.buildozer/android/platform
+        wget https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip
+        unzip -q android-ndk-r21e-linux-x86_64.zip
+        mv android-ndk-r21e ndk-r21e
+        rm android-ndk-r21e-linux-x86_64.zip
 
     - name: Build APK
       run: |
