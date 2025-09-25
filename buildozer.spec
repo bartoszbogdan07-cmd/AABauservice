@@ -1,24 +1,21 @@
 [app]
-title = A&A-Bauservice
+title = AABauservice
 package.name = aabauservice
-package.domain = com.aabauservice
+package.domain = org.aabauservice
 source.dir = .
-source.include_exts = py,kv,png,jpg,ttf,ini,json
-version = 1.0.0
+source.include_exts = py,png,jpg,kv,atlas
+version = 0.1
+requirements = python3,kivy==2.2.1,kivymd==1.1.1,plyer,certifi
 orientation = portrait
 fullscreen = 0
-requirements = python3,kivy==2.3.0,kivymd==1.2.0,plyer,certifi
-android.api = 35
-android.minapi = 24
-android.arch = arm64-v8a, armeabi-v7a
-android.permissions = INTERNET, ACCESS_FINE_LOCATION
-# Uncomment and provide your icon paths if desired
-# icon.filename = assets/icon.png
 
 [buildozer]
 log_level = 2
-warn_on_root = 0
+warn_on_root = 1
 
 [android]
-# If Gradle memory issues occur, you can raise this
-# gradle_args = -Xmx4096m
+# Minimalne API dla zgodności
+android.api = 31
+android.minapi = 24
+android.ndk_api = 24
+android.archs = arm64-v8a,armeabi-v7a
