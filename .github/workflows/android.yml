@@ -7,55 +7,70 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest   # ✅ zamiast ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      - name: Install system dependencies
+      - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y python3-pip python3-setuptools python3-wheel \
-            git zip unzip openjdk-17-jdk libffi-dev libssl-dev \
-            libsqlite3-dev zlib1g-dev
+          sudo apt-get update
+          sudo apt-get install -y \
+            openjdk-17-jdk \
+            unzip \
+            zip \
+            git \
+            wget \
+            libffi-dev \
+            libssl-dev \
+            python3-pip \
+            python3-setuptools \
+            python3-wheel \
+            python3-dev \
+            build-essential \
+            cmake
 
       - name: Install buildozer
         run: |
-          pip install --upgrade pip
-          pip install cython
+          pip install --upgrade pip setuptools wheel Cython
           pip install buildozer==1.5.0
 
-      - name: Configure Android SDK/NDK
+      - name: Configure Android NDK/SDK
         run: |
           mkdir -p $HOME/.buildozer/android/platform
           cd $HOME/.buildozer/android/platform
 
-          # Pobierz narzędzia
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk-tools.zip
-          unzip -q sdk-tools.zip -d cmdline-tools
-          rm sdk-tools.zip
+          # Android NDK
+          wget https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip
+          unzip -q android-ndk-r21e-linux-x86_64.zip
+          mv android-ndk-r21e ndk
+          rm android-ndk-r21e-linux-x86_64.zip
 
-          # Akceptuj wszystkie licencje
-          yes | cmdline-tools/cmdline-tools/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform --licenses
+          # Android SDK
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          unzip -q cmdline-tools.zip -d android-sdk
+          rm cmdline-tools.zip
+          mkdir -p android-sdk/cmdline-tools/latest
+          mv android-sdk/cmdline-tools/* android-sdk/cmdline-tools/latest/ || true
 
-          # Zainstaluj wymagane pakiety
-          yes | cmdline-tools/cmdline-tools/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform \
-            "platform-tools" \
-            "platforms;android-31" \
-            "build-tools;33.0.2" \
-            "ndk;21.4.7075529"
+          export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
       - name: Build APK
         run: |
           buildozer android debug log_level=2
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4   # ✅ poprawiona wersja
         with:
           name: kivy-apk
           path: bin/*.apk
