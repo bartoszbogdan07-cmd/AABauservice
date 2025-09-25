@@ -2,15 +2,23 @@ name: Build Kivy APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04   # 🔴 WAŻNE – wymusza starszy runner
+    runs-on: ubuntu-20.04   # ✅ stabilna wersja runnera
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Cache buildozer
+      uses: actions/cache@v3
+      with:
+        path: |
+          .buildozer
+          ~/.buildozer
+        key: buildozer-${{ runner.os }}-${{ hashFiles('**/buildozer.spec') }}
 
     - name: Install system dependencies
       run: |
@@ -37,24 +45,23 @@ jobs:
         pip install --upgrade pip setuptools wheel Cython
         pip install buildozer==1.5.0
 
-    - name: Prepare Android SDK/NDK
+    - name: Install Android SDK & NDK (faster config)
       run: |
-        mkdir -p $HOME/.buildozer/android/platform
-        cd $HOME/.buildozer/android/platform
-        # SDK Tools
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O sdk-tools.zip
-        unzip -q sdk-tools.zip -d android-sdk
-        rm sdk-tools.zip
-        yes | android-sdk/cmdline-tools/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk \
-          "platform-tools" "platforms;android-33" "build-tools;33.0.2"
-        # NDK
-        wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
-        unzip -q ndk.zip -d .
-        mv android-ndk-r25b android-ndk
-        rm ndk.zip
+        mkdir -p $HOME/android-sdk
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+        unzip -q cmdline-tools.zip -d $HOME/android-sdk/
+        mkdir -p $HOME/android-sdk/cmdline-tools/latest
+        mv $HOME/android-sdk/cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest/ || true
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+          "platform-tools" "platforms;android-30" "build-tools;30.0.3" "ndk;23.2.8568313"
 
     - name: Build APK
       run: |
+        export ANDROIDSDK=$HOME/android-sdk
+        export ANDROIDNDK=$HOME/android-sdk/ndk/23.2.8568313
+        export ANDROIDAPI=30
+        export ANDROIDMINAPI=21
         buildozer android debug
 
     - name: Upload APK artifact
