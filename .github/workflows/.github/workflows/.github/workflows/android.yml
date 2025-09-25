@@ -63,7 +63,7 @@ jobs:
           export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
 
-          # 👉 symlink dla sdkmanager, którego szuka Buildozer
+          # 👉 fix dla Buildozer: utworzenie folderu tools/bin i linku do sdkmanager
           mkdir -p $ANDROID_HOME/tools/bin
           ln -s $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager $ANDROID_HOME/tools/bin/sdkmanager
 
