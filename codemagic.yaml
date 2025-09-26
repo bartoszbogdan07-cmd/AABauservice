@@ -8,7 +8,7 @@ workflows:
       - name: Install dependencies
         script: |
           sudo apt-get update -qq
-          sudo apt-get install -y build-essential git zip unzip openjdk-17-jdk python3-pip \
+          sudo apt-get install -y build-essential git zip unzip openjdk-17-jdk python3-pip python3-distutils \
             autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev \
             libtinfo5 cmake
           pip install --upgrade pip wheel Cython buildozer
