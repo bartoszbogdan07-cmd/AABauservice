@@ -19,7 +19,3 @@ workflows:
           buildozer -v android debug
     artifacts:
       - build/*.apk
-    publishing:
-      email:
-        recipients:
-          - $CM_USER_EMAIL
