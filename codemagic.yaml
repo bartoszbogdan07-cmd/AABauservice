@@ -2,6 +2,7 @@ workflows:
   kivy-android:
     name: Build Kivy APK
     environment:
+      instance_type: linux_x2   # 🔹 Wymuszamy Linux zamiast Maca
       vars:
         BUILD_TYPE: "debug"
     scripts:
