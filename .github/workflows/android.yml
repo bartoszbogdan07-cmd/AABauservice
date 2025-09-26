@@ -3,22 +3,21 @@ name: Build Kivy APK
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
-    runs-on: ubuntu-20.04   # ✅ stabilna wersja runnera
+    runs-on: ubuntu-latest   # zamiast 20.04 – mniej kolejek
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-    - name: Cache buildozer
-      uses: actions/cache@v3
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        path: |
-          .buildozer
-          ~/.buildozer
-        key: buildozer-${{ runner.os }}-${{ hashFiles('**/buildozer.spec') }}
+        python-version: "3.10"
 
     - name: Install system dependencies
       run: |
@@ -26,46 +25,36 @@ jobs:
         sudo apt-get install -y \
           build-essential \
           git \
-          zip \
-          unzip \
           openjdk-17-jdk \
           python3-pip \
+          python3-setuptools \
+          python3-wheel \
+          unzip \
+          zip \
           autoconf \
           libtool \
           pkg-config \
           zlib1g-dev \
           libncurses5 \
-          libncurses5-dev \
           libtinfo5 \
+          libffi-dev \
           cmake \
-          ant
+          ninja-build \
+          ccache \
+          lld
 
-    - name: Install Python deps
+    - name: Install Buildozer
       run: |
-        pip install --upgrade pip setuptools wheel Cython
+        pip install --upgrade pip wheel setuptools Cython
         pip install buildozer==1.5.0
-
-    - name: Install Android SDK & NDK (faster config)
-      run: |
-        mkdir -p $HOME/android-sdk
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-        unzip -q cmdline-tools.zip -d $HOME/android-sdk/
-        mkdir -p $HOME/android-sdk/cmdline-tools/latest
-        mv $HOME/android-sdk/cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest/ || true
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager \
-          "platform-tools" "platforms;android-30" "build-tools;30.0.3" "ndk;23.2.8568313"
 
     - name: Build APK
       run: |
-        export ANDROIDSDK=$HOME/android-sdk
-        export ANDROIDNDK=$HOME/android-sdk/ndk/23.2.8568313
-        export ANDROIDAPI=30
-        export ANDROIDMINAPI=21
-        buildozer android debug
+        cd $GITHUB_WORKSPACE
+        buildozer -v android debug
 
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
-        name: kivy-apk
+        name: app-apk
         path: bin/*.apk
