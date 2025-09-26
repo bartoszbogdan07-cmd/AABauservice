@@ -4,7 +4,6 @@ workflows:
     environment:
       vars:
         BUILD_TYPE: "debug"
-      python: "3.10"
     scripts:
       - name: Install dependencies
         script: |
